@@ -44,66 +44,77 @@ async function classifySms(req: Request) {
 
   const started = performance.now();
 
-  const response = await ollama.systemone({
-    model: "laya",
-    state,
-    questions: {
-      is_spam: {
-        type: "noul",
-        instructions:
-          "Is this SMS unsolicited spam, junk advertising, or bulk promo the user did not ask for?",
-        criteria: {
-          true: "Spam, junk, or unsolicited promotional SMS.",
-          false: "Legitimate personal, transactional, or expected SMS.",
+  try {
+    const response = await ollama.systemone({
+      model: "laya",
+      state,
+      questions: {
+        is_spam: {
+          type: "noul",
+          instructions:
+            "Is this SMS unsolicited spam, junk advertising, or bulk promo the user did not ask for?",
+          criteria: {
+            true: "Spam, junk, or unsolicited promotional SMS.",
+            false: "Legitimate personal, transactional, or expected SMS.",
+          },
+        },
+        is_phishing: {
+          type: "noul",
+          instructions:
+            "Is this SMS a phishing or scam attempt that tries to steal money, credentials, OTPs, or personal data?",
+          criteria: {
+            true: "Phishing or scam intent is present.",
+            false: "No phishing or scam intent.",
+          },
+        },
+        asks_credentials: {
+          type: "noul",
+          instructions:
+            "Does this SMS ask the recipient to share passwords, OTPs, PINs, bank details, or click a suspicious link to verify an account?",
+        },
+        category: {
+          type: "choice",
+          instructions: "What is the primary category of this SMS?",
+          criteria: {
+            otp: "One-time passcodes, verification codes, 2FA",
+            transactional:
+              "Receipts, delivery updates, appointment reminders, account alerts the user would expect",
+            promotional: "Marketing, offers, sales, newsletters",
+            personal: "Messages from a person (friends, family, coworkers)",
+            scam: "Fraud, phishing, impersonation, social engineering",
+            other: "Does not fit the categories above",
+          },
+        },
+        risk: {
+          type: "score",
+          instructions: "How risky is this SMS for the recipient?",
+          criteria: [
+            "Safe — no meaningful risk",
+            "Caution — slightly suspicious or unwanted",
+            "Dangerous — likely scam, phishing, or harmful",
+          ],
         },
       },
-      is_phishing: {
-        type: "noul",
-        instructions:
-          "Is this SMS a phishing or scam attempt that tries to steal money, credentials, OTPs, or personal data?",
-        criteria: {
-          true: "Phishing or scam intent is present.",
-          false: "No phishing or scam intent.",
-        },
-      },
-      asks_credentials: {
-        type: "noul",
-        instructions:
-          "Does this SMS ask the recipient to share passwords, OTPs, PINs, bank details, or click a suspicious link to verify an account?",
-      },
-      category: {
-        type: "choice",
-        instructions: "What is the primary category of this SMS?",
-        criteria: {
-          otp: "One-time passcodes, verification codes, 2FA",
-          transactional:
-            "Receipts, delivery updates, appointment reminders, account alerts the user would expect",
-          promotional: "Marketing, offers, sales, newsletters",
-          personal: "Messages from a person (friends, family, coworkers)",
-          scam: "Fraud, phishing, impersonation, social engineering",
-          other: "Does not fit the categories above",
-        },
-      },
-      risk: {
-        type: "score",
-        instructions: "How risky is this SMS for the recipient?",
-        criteria: [
-          "Safe — no meaningful risk",
-          "Caution — slightly suspicious or unwanted",
-          "Dangerous — likely scam, phishing, or harmful",
-        ],
-      },
-    },
-  });
+    });
 
-  const elapsedMs = Math.round(performance.now() - started);
+    const elapsedMs = Math.round(performance.now() - started);
 
-  return json({
-    model: response.model,
-    answers: response.answers,
-    usage: response.usage,
-    elapsedMs,
-  });
+    return json({
+      model: response.model,
+      answers: response.answers,
+      usage: response.usage,
+      elapsedMs,
+    });
+  } catch (error) {
+    console.error("Laya classify failed:", error);
+    return json(
+      {
+        error:
+          "اتصال به Ollama یا مدل Laya برقرار نشد. مطمئن شوید ollama serve در حال اجراست و مدل laya کشیده شده است.",
+      },
+      502,
+    );
+  }
 }
 
 const server = Bun.serve({

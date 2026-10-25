@@ -161,7 +161,13 @@ function App() {
       setResult(data);
     } catch (err) {
       setResult(null);
-      setError(err instanceof Error ? err.message : "خطایی رخ داد");
+      const message =
+        err instanceof TypeError
+          ? "سرور در دسترس نیست. با bun start اجرا کنید و صفحه را تازه کنید."
+          : err instanceof Error
+            ? err.message
+            : "خطایی رخ داد";
+      setError(message);
     } finally {
       setLoading(false);
     }
