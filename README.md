@@ -4,13 +4,13 @@
 
 Uses [ollama-js](https://github.com/ollama/ollama-js) `systemone` (not chat). Laya returns typed answers with calibrated probabilities; it does not generate text.
 
-> مدل پیش‌فرض `laya` انگلیسی‌محور است؛ برای دقت بهتر روی متن فارسی می‌توانید `laya:322m-multilingual-bf16` را امتحان کنید.
+> مدل پیش‌فرض `laya:322m-multilingual-bf16` است (مناسب متن فارسی). تگ انگلیسی `laya` / `laya:421m-english-bf16` هم در صورت نیاز در دسترس است.
 
 ## Prerequisites
 
 - [Bun](https://bun.com)
 - [Ollama](https://ollama.com) **0.40+** running locally
-- Model pulled: `ollama pull laya`
+- Model pulled: `ollama pull laya:322m-multilingual-bf16`
 
 ## Run
 
@@ -37,7 +37,7 @@ Each request asks Laya several questions in one forward pass:
 
 ## API
 
-`GET /api/status` — Ollama up/down, whether `laya` is present, and ping ms.
+`GET /api/status` — Ollama up/down, whether `laya:322m-multilingual-bf16` is present, and ping ms.
 
 `POST /api/classify`
 
@@ -56,4 +56,4 @@ Response includes `answers`, `usage`, and `elapsedMs`.
 
 - Bun (`Bun.serve` + HTML imports)
 - React UI
-- `ollama` JS client → local `laya` via `/v1/systemone`
+- `ollama` JS client → local `laya:322m-multilingual-bf16` via `/v1/systemone`

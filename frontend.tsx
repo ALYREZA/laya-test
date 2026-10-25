@@ -265,7 +265,7 @@ function App() {
   function statusLabel() {
     if (statusLoading) return "در حال بررسی…";
     if (!ollamaUp) return "قطع";
-    if (!modelReady) return "بدون مدل laya";
+    if (!modelReady) return "بدون مدل laya:322m-multilingual-bf16";
     return "متصل";
   }
 

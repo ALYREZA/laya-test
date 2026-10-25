@@ -2,6 +2,7 @@ import index from "./index.html";
 import ollama from "ollama";
 
 const SAMPLE_LIMIT = 2000;
+const LAYA_MODEL = "laya:322m-multilingual-bf16";
 
 type ClassifyBody = {
   text?: unknown;
@@ -19,13 +20,13 @@ async function layaStatus() {
     const tags = await ollama.list();
     const models = tags.models ?? [];
     const laya = models.find(function (model) {
-      return model.name === "laya" || model.name.startsWith("laya:");
+      return model.name === LAYA_MODEL;
     });
 
     return json({
       ok: true,
       ollama: "up",
-      model: laya?.name ?? null,
+      model: laya?.name ?? LAYA_MODEL,
       modelReady: Boolean(laya),
       pingMs: Math.round(performance.now() - started),
       checkedAt: new Date().toISOString(),
@@ -81,7 +82,7 @@ async function classifySms(req: Request) {
 
   try {
     const response = await ollama.systemone({
-      model: "laya",
+      model: LAYA_MODEL,
       state,
       questions: {
         is_spam: {
@@ -156,7 +157,7 @@ async function classifySms(req: Request) {
     return json(
       {
         error:
-          "اتصال به Ollama یا مدل Laya برقرار نشد. مطمئن شوید ollama serve در حال اجراست و مدل laya کشیده شده است.",
+          `اتصال به Ollama یا مدل Laya برقرار نشد. مطمئن شوید ollama serve در حال اجراست و مدل ${LAYA_MODEL} کشیده شده است.`,
       },
       502,
     );
