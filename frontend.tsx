@@ -44,39 +44,59 @@ type Sample = {
   text: string;
 };
 
+type CategoryKey =
+  | "otp"
+  | "transactional"
+  | "promotional"
+  | "personal"
+  | "scam"
+  | "other";
+
+const CATEGORY_LABELS: Record<CategoryKey, string> = {
+  otp: "رمز یک‌بارمصرف",
+  transactional: "تراکنشی",
+  promotional: "تبلیغاتی",
+  personal: "شخصی",
+  scam: "کلاهبرداری",
+  other: "سایر",
+};
+
+const RISK_LABELS: Record<string, string> = {
+  "0": "امن",
+  "1": "مشکوک",
+  "2": "خطرناک",
+};
+
 const SAMPLES: Sample[] = [
   {
-    label: "Phishing",
+    label: "فیشینگ",
     sender: "BANK-ALERT",
-    text: "URGENT: Your account will be locked today. Verify now at http://secure-update.example to keep access.",
+    text: "فوری: حساب شما امروز مسدود می‌شود. برای تأیید همین حالا وارد شوید: http://secure-update.example",
   },
   {
-    label: "OTP",
-    sender: "Auth",
-    text: "Your verification code is 482913. Do not share this code with anyone.",
+    label: "رمز یک‌بارمصرف",
+    sender: "بانک",
+    text: "کد تأیید شما ۴۸۲۹۱۳ است. این کد را در اختیار کسی قرار ندهید.",
   },
   {
-    label: "Promo",
+    label: "تبلیغات",
     sender: "ShopDeals",
-    text: "FLASH SALE: 40% off everything this weekend only. Reply STOP to unsubscribe.",
+    text: "فروش ویژه: تا ۴۰٪ تخفیف فقط این آخر هفته. برای لغو عضویت STOP بفرستید.",
   },
   {
-    label: "Delivery",
-    sender: "ParcelCo",
-    text: "Your package #A18422 is out for delivery today between 2–6pm.",
+    label: "ارسال مرسوله",
+    sender: "پست",
+    text: "مرسوله شماره A18422 امروز بین ۱۴ تا ۱۸ تحویل می‌شود.",
   },
 ];
 
-const CATEGORIES = [
-  "otp",
-  "transactional",
-  "promotional",
-  "personal",
-  "scam",
-  "other",
-] as const;
+const CATEGORIES = Object.keys(CATEGORY_LABELS) as CategoryKey[];
 
 function pct(value: number) {
+  return `${Math.round(value * 100)}٪`;
+}
+
+function widthPct(value: number) {
   return `${Math.round(value * 100)}%`;
 }
 
@@ -87,9 +107,9 @@ function riskLevel(score: number): "safe" | "caution" | "danger" {
 }
 
 function verdictTitle(level: "safe" | "caution" | "danger") {
-  if (level === "danger") return "High risk";
-  if (level === "caution") return "Needs caution";
-  return "Looks safe";
+  if (level === "danger") return "ریسک بالا";
+  if (level === "caution") return "نیاز به احتیاط";
+  return "به‌نظر امن است";
 }
 
 function meterTone(value: number): "" | "caution" | "danger" {
@@ -98,8 +118,12 @@ function meterTone(value: number): "" | "caution" | "danger" {
   return "";
 }
 
+function categoryLabel(key: string) {
+  return CATEGORY_LABELS[key as CategoryKey] ?? key;
+}
+
 function App() {
-  const [sender, setSender] = useState("");
+  const [sender, setSender] = useState(SAMPLES[0]?.sender ?? "");
   const [text, setText] = useState(SAMPLES[0]?.text ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,13 +155,13 @@ function App() {
       };
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Classification failed");
+        throw new Error(data.error ?? "طبقه‌بندی ناموفق بود");
       }
 
       setResult(data);
     } catch (err) {
       setResult(null);
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "خطایی رخ داد");
     } finally {
       setLoading(false);
     }
@@ -151,10 +175,10 @@ function App() {
       <header className="hero">
         <p className="brand">Laya</p>
         <div className="hero-copy">
-          <h1>Classify SMS. Catch spam.</h1>
+          <h1>پیامک را طبقه‌بندی کن. اسپم را پیدا کن.</h1>
           <p>
-            Paste a message and Laya scores spam, phishing, category, and risk
-            in one pass — calibrated probabilities, no generated text.
+            متن پیام را بچسبانید؛ Laya در یک مرحله احتمال اسپم، فیشینگ، دسته و
+            ریسک را با احتمال‌های کالیبره‌شده برمی‌گرداند — بدون تولید متن.
           </p>
         </div>
       </header>
@@ -162,33 +186,33 @@ function App() {
       <div className="workspace">
         <form className="composer" onSubmit={classify}>
           <div className="composer-label">
-            <strong>Compose SMS</strong>
+            <strong>نوشتن پیامک</strong>
             <span>{text.length}/2000</span>
           </div>
 
           <div className="field">
-            <label htmlFor="sender">Sender (optional)</label>
+            <label htmlFor="sender">فرستنده (اختیاری)</label>
             <input
               id="sender"
               value={sender}
               onChange={function (event) {
                 setSender(event.target.value);
               }}
-              placeholder="BANK-ALERT, Auth, +1555…"
+              placeholder="بانک، Auth، ۰۹۱۲…"
               maxLength={80}
               autoComplete="off"
             />
           </div>
 
           <div className="field">
-            <label htmlFor="sms">Message</label>
+            <label htmlFor="sms">متن پیام</label>
             <textarea
               id="sms"
               value={text}
               onChange={function (event) {
                 setText(event.target.value);
               }}
-              placeholder="Paste an SMS to classify…"
+              placeholder="پیامک را برای طبقه‌بندی اینجا بچسبانید…"
               maxLength={2000}
               required
             />
@@ -212,9 +236,9 @@ function App() {
 
           <div className="actions">
             <button type="submit" disabled={loading || !text.trim()}>
-              {loading ? "Classifying…" : "Classify with Laya"}
+              {loading ? "در حال طبقه‌بندی…" : "طبقه‌بندی با Laya"}
             </button>
-            <span className="hint">Local model · systemone</span>
+            <span className="hint">مدل محلی · systemone</span>
           </div>
 
           {error ? <p className="error">{error}</p> : null}
@@ -224,8 +248,8 @@ function App() {
           {!answers ? (
             <div className="results-empty">
               <div>
-                <strong>Waiting for a message</strong>
-                Results for spam, phishing, category, and risk show up here.
+                <strong>منتظر پیام</strong>
+                نتیجه اسپم، فیشینگ، دسته و ریسک اینجا نمایش داده می‌شود.
               </div>
             </div>
           ) : (
@@ -234,37 +258,37 @@ function App() {
                 <div>
                   <h2>{verdictTitle(level)}</h2>
                   <p>
-                    Category: {answers.category.choice} · risk score{" "}
+                    دسته: {categoryLabel(answers.category.choice)} · امتیاز ریسک{" "}
                     {answers.risk.score.toFixed(2)}
                   </p>
                 </div>
                 <div className="meta">
-                  {result.elapsedMs} ms
+                  {result.elapsedMs} میلی‌ثانیه
                   <br />
-                  {result.usage.input_tokens} tokens
+                  {result.usage.input_tokens} توکن
                 </div>
               </div>
 
               <div className="meters">
                 <Meter
-                  label="Spam"
+                  label="اسپم"
                   value={answers.is_spam.noul}
                   tone={meterTone(answers.is_spam.noul)}
                 />
                 <Meter
-                  label="Phishing"
+                  label="فیشینگ"
                   value={answers.is_phishing.noul}
                   tone={meterTone(answers.is_phishing.noul)}
                 />
                 <Meter
-                  label="Asks for credentials"
+                  label="درخواست اطلاعات حساس"
                   value={answers.asks_credentials.noul}
                   tone={meterTone(answers.asks_credentials.noul)}
                 />
               </div>
 
               <div className="category-row">
-                <h3>Category</h3>
+                <h3>دسته</h3>
                 <div className="chips">
                   {CATEGORIES.map(function (category) {
                     const active = answers.category.choice === category;
@@ -278,18 +302,19 @@ function App() {
                         data-active={active ? "true" : "false"}
                         title={pct(probability)}
                       >
-                        {category}
+                        {CATEGORY_LABELS[category]}
                         {active ? ` · ${pct(probability)}` : ""}
                       </span>
                     );
                   })}
                 </div>
                 <p className="risk-note">
-                  Confidence {pct(answers.category.confidence)}. Risk levels:{" "}
-                  {Object.entries(answers.risk.legend)
-                    .map(function ([key, label]) {
+                  اطمینان دسته {pct(answers.category.confidence)}. سطوح ریسک:{" "}
+                  {Object.keys(answers.risk.legend)
+                    .map(function (key) {
                       const probability =
                         answers.risk.probabilities[key] ?? 0;
+                      const label = RISK_LABELS[key] ?? answers.risk.legend[key];
                       return `${label} (${pct(probability)})`;
                     })
                     .join(" · ")}
@@ -317,7 +342,7 @@ function Meter(props: {
       <div className="track">
         <div
           className={`fill ${props.tone}`.trim()}
-          style={{ width: pct(props.value) }}
+          style={{ width: widthPct(props.value) }}
         />
       </div>
     </div>
@@ -327,7 +352,7 @@ function Meter(props: {
 const root = document.getElementById("root");
 
 if (!root) {
-  throw new Error("Root element #root not found");
+  throw new Error("عنصر ریشه #root پیدا نشد");
 }
 
 createRoot(root).render(<App />);

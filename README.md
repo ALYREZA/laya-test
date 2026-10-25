@@ -1,8 +1,10 @@
 # laya-test
 
-Local lab for [Laya](https://ollama.com/library/laya) — an Ollama decision model — focused on **SMS classification and spam detection**.
+آزمایشگاه محلی [Laya](https://ollama.com/library/laya) برای **طبقه‌بندی پیامک و تشخیص اسپم** (رابط فارسی، راست‌چین).
 
 Uses [ollama-js](https://github.com/ollama/ollama-js) `systemone` (not chat). Laya returns typed answers with calibrated probabilities; it does not generate text.
+
+> مدل پیش‌فرض `laya` انگلیسی‌محور است؛ برای دقت بهتر روی متن فارسی می‌توانید `laya:322m-multilingual-bf16` را امتحان کنید.
 
 ## Prerequisites
 

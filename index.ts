@@ -18,7 +18,7 @@ async function classifySms(req: Request) {
   try {
     body = (await req.json()) as ClassifyBody;
   } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+    return json({ error: "بدنه درخواست نامعتبر است" }, 400);
   }
 
   const text = typeof body.text === "string" ? body.text.trim() : "";
@@ -26,12 +26,12 @@ async function classifySms(req: Request) {
     typeof body.sender === "string" ? body.sender.trim() : undefined;
 
   if (!text) {
-    return json({ error: "SMS text is required" }, 400);
+    return json({ error: "متن پیامک الزامی است" }, 400);
   }
 
   if (text.length > SAMPLE_LIMIT) {
     return json(
-      { error: `SMS text must be under ${SAMPLE_LIMIT} characters` },
+      { error: `متن پیامک باید کمتر از ${SAMPLE_LIMIT} کاراکتر باشد` },
       400,
     );
   }
