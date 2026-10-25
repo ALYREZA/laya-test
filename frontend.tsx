@@ -48,6 +48,8 @@ type CategoryKey =
   | "otp"
   | "transactional"
   | "promotional"
+  | "family"
+  | "friends"
   | "personal"
   | "scam"
   | "other";
@@ -56,6 +58,8 @@ const CATEGORY_LABELS: Record<CategoryKey, string> = {
   otp: "رمز یک‌بارمصرف",
   transactional: "تراکنشی",
   promotional: "تبلیغاتی",
+  family: "خانواده",
+  friends: "دوستان",
   personal: "شخصی",
   scam: "کلاهبرداری",
   other: "سایر",

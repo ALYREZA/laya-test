@@ -80,7 +80,9 @@ async function classifySms(req: Request) {
             transactional:
               "Receipts, delivery updates, appointment reminders, account alerts the user would expect",
             promotional: "Marketing, offers, sales, newsletters",
-            personal: "Messages from a person (friends, family, coworkers)",
+            family: "Messages from family members (parents, siblings, spouse, relatives)",
+            friends: "Messages from friends or acquaintances",
+            personal: "Messages from a person who is not clearly family or friends (e.g. coworkers)",
             scam: "Fraud, phishing, impersonation, social engineering",
             other: "Does not fit the categories above",
           },
