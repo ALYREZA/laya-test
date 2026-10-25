@@ -37,6 +37,8 @@ Each request asks Laya several questions in one forward pass:
 
 ## API
 
+`GET /api/status` — Ollama up/down, whether `laya` is present, and ping ms.
+
 `POST /api/classify`
 
 ```json

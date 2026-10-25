@@ -12,6 +12,41 @@ function json(data: unknown, status = 200) {
   return Response.json(data, { status });
 }
 
+async function layaStatus() {
+  const started = performance.now();
+
+  try {
+    const tags = await ollama.list();
+    const models = tags.models ?? [];
+    const laya = models.find(function (model) {
+      return model.name === "laya" || model.name.startsWith("laya:");
+    });
+
+    return json({
+      ok: true,
+      ollama: "up",
+      model: laya?.name ?? null,
+      modelReady: Boolean(laya),
+      pingMs: Math.round(performance.now() - started),
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Laya status failed:", error);
+    return json(
+      {
+        ok: false,
+        ollama: "down",
+        model: null,
+        modelReady: false,
+        pingMs: Math.round(performance.now() - started),
+        checkedAt: new Date().toISOString(),
+        error: "Ollama در دسترس نیست",
+      },
+      503,
+    );
+  }
+}
+
 async function classifySms(req: Request) {
   let body: ClassifyBody;
 
@@ -132,6 +167,9 @@ const server = Bun.serve({
   port: 3000,
   routes: {
     "/": index,
+    "/api/status": {
+      GET: layaStatus,
+    },
     "/api/classify": {
       POST: classifySms,
     },

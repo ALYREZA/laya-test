@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -43,6 +43,19 @@ type Sample = {
   sender: string;
   text: string;
 };
+
+type StatusResponse = {
+  ok: boolean;
+  ollama: "up" | "down";
+  model: string | null;
+  modelReady: boolean;
+  pingMs: number;
+  checkedAt: string;
+  error?: string;
+};
+
+const LATENCY_HISTORY_LIMIT = 20;
+const STATUS_POLL_MS = 15_000;
 
 type CategoryKey =
   | "otp"
@@ -138,12 +151,54 @@ function categoryLabel(key: string) {
   return CATEGORY_LABELS[key as CategoryKey] ?? key;
 }
 
+function average(values: number[]) {
+  if (values.length === 0) return null;
+  const total = values.reduce(function (sum, value) {
+    return sum + value;
+  }, 0);
+  return Math.round(total / values.length);
+}
+
 function App() {
   const [sender, setSender] = useState(SAMPLES[0]?.sender ?? "");
   const [text, setText] = useState(SAMPLES[0]?.text ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ClassifyResponse | null>(null);
+  const [status, setStatus] = useState<StatusResponse | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [latencies, setLatencies] = useState<number[]>([]);
+
+  async function refreshStatus() {
+    try {
+      const response = await fetch("/api/status");
+      const data = (await response.json()) as StatusResponse;
+      setStatus(data);
+    } catch {
+      setStatus({
+        ok: false,
+        ollama: "down",
+        model: null,
+        modelReady: false,
+        pingMs: 0,
+        checkedAt: new Date().toISOString(),
+        error: "سرور وضعیت در دسترس نیست",
+      });
+    } finally {
+      setStatusLoading(false);
+    }
+  }
+
+  useEffect(function () {
+    void refreshStatus();
+    const timer = window.setInterval(function () {
+      void refreshStatus();
+    }, STATUS_POLL_MS);
+
+    return function () {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   function applySample(sample: Sample) {
     setSender(sample.sender);
@@ -175,6 +230,10 @@ function App() {
       }
 
       setResult(data);
+      setLatencies(function (prev) {
+        return [...prev, data.elapsedMs].slice(-LATENCY_HISTORY_LIMIT);
+      });
+      void refreshStatus();
     } catch (err) {
       setResult(null);
       const message =
@@ -191,6 +250,24 @@ function App() {
 
   const answers = result?.answers;
   const level = answers ? riskLevel(answers.risk.score) : "safe";
+  const avgMs = average(latencies);
+  const lastMs = latencies[latencies.length - 1] ?? null;
+  const ollamaUp = status?.ollama === "up";
+  const modelReady = Boolean(status?.modelReady);
+  const statusTone = statusLoading
+    ? "checking"
+    : !ollamaUp
+      ? "down"
+      : modelReady
+        ? "up"
+        : "warn";
+
+  function statusLabel() {
+    if (statusLoading) return "در حال بررسی…";
+    if (!ollamaUp) return "قطع";
+    if (!modelReady) return "بدون مدل laya";
+    return "متصل";
+  }
 
   return (
     <div className="app">
@@ -204,6 +281,36 @@ function App() {
           </p>
         </div>
       </header>
+
+      <div className="status-strip" data-tone={statusTone} aria-live="polite">
+        <div className="status-item">
+          <span className="status-dot" aria-hidden="true" />
+          <span>
+            Ollama: <strong>{statusLabel()}</strong>
+            {status?.model ? (
+              <span className="status-muted"> · {status.model}</span>
+            ) : null}
+          </span>
+        </div>
+        <div className="status-item">
+          <span className="status-label">پینگ</span>
+          <strong>
+            {statusLoading || !status ? "—" : `${status.pingMs} ms`}
+          </strong>
+        </div>
+        <div className="status-item">
+          <span className="status-label">آخرین</span>
+          <strong>{lastMs == null ? "—" : `${lastMs} ms`}</strong>
+        </div>
+        <div className="status-item">
+          <span className="status-label">میانگین</span>
+          <strong>
+            {avgMs == null
+              ? "—"
+              : `${avgMs} ms · ${latencies.length} اجرا`}
+          </strong>
+        </div>
+      </div>
 
       <div className="workspace">
         <form className="composer" onSubmit={classify}>

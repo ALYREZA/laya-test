@@ -102,6 +102,80 @@ body::before {
   line-height: 1.45;
 }
 
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.15rem;
+  align-items: center;
+  margin: 0 0 1.35rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  animation: rise 0.75s ease-out 0.04s both;
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-item strong {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-label {
+  opacity: 0.85;
+}
+
+.status-muted {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  box-shadow: 0 0 0 3px rgba(58, 74, 99, 0.12);
+}
+
+.status-strip[data-tone="up"] .status-dot {
+  background: var(--safe);
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.16);
+}
+
+.status-strip[data-tone="warn"] .status-dot {
+  background: var(--caution);
+  box-shadow: 0 0 0 3px rgba(196, 122, 0, 0.16);
+}
+
+.status-strip[data-tone="down"] .status-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.16);
+}
+
+.status-strip[data-tone="checking"] .status-dot {
+  animation: pulse-dot 1.1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
