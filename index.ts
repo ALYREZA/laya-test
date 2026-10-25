@@ -1,0 +1,123 @@
+import index from "./index.html";
+import ollama from "ollama";
+
+const SAMPLE_LIMIT = 2000;
+
+type ClassifyBody = {
+  text?: unknown;
+  sender?: unknown;
+};
+
+function json(data: unknown, status = 200) {
+  return Response.json(data, { status });
+}
+
+async function classifySms(req: Request) {
+  let body: ClassifyBody;
+
+  try {
+    body = (await req.json()) as ClassifyBody;
+  } catch {
+    return json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const text = typeof body.text === "string" ? body.text.trim() : "";
+  const sender =
+    typeof body.sender === "string" ? body.sender.trim() : undefined;
+
+  if (!text) {
+    return json({ error: "SMS text is required" }, 400);
+  }
+
+  if (text.length > SAMPLE_LIMIT) {
+    return json(
+      { error: `SMS text must be under ${SAMPLE_LIMIT} characters` },
+      400,
+    );
+  }
+
+  const state = {
+    channel: "sms",
+    ...(sender ? { sender } : {}),
+    body: text,
+  };
+
+  const started = performance.now();
+
+  const response = await ollama.systemone({
+    model: "laya",
+    state,
+    questions: {
+      is_spam: {
+        type: "noul",
+        instructions:
+          "Is this SMS unsolicited spam, junk advertising, or bulk promo the user did not ask for?",
+        criteria: {
+          true: "Spam, junk, or unsolicited promotional SMS.",
+          false: "Legitimate personal, transactional, or expected SMS.",
+        },
+      },
+      is_phishing: {
+        type: "noul",
+        instructions:
+          "Is this SMS a phishing or scam attempt that tries to steal money, credentials, OTPs, or personal data?",
+        criteria: {
+          true: "Phishing or scam intent is present.",
+          false: "No phishing or scam intent.",
+        },
+      },
+      asks_credentials: {
+        type: "noul",
+        instructions:
+          "Does this SMS ask the recipient to share passwords, OTPs, PINs, bank details, or click a suspicious link to verify an account?",
+      },
+      category: {
+        type: "choice",
+        instructions: "What is the primary category of this SMS?",
+        criteria: {
+          otp: "One-time passcodes, verification codes, 2FA",
+          transactional:
+            "Receipts, delivery updates, appointment reminders, account alerts the user would expect",
+          promotional: "Marketing, offers, sales, newsletters",
+          personal: "Messages from a person (friends, family, coworkers)",
+          scam: "Fraud, phishing, impersonation, social engineering",
+          other: "Does not fit the categories above",
+        },
+      },
+      risk: {
+        type: "score",
+        instructions: "How risky is this SMS for the recipient?",
+        criteria: [
+          "Safe — no meaningful risk",
+          "Caution — slightly suspicious or unwanted",
+          "Dangerous — likely scam, phishing, or harmful",
+        ],
+      },
+    },
+  });
+
+  const elapsedMs = Math.round(performance.now() - started);
+
+  return json({
+    model: response.model,
+    answers: response.answers,
+    usage: response.usage,
+    elapsedMs,
+  });
+}
+
+const server = Bun.serve({
+  port: 3000,
+  routes: {
+    "/": index,
+    "/api/classify": {
+      POST: classifySms,
+    },
+  },
+  development: {
+    hmr: true,
+    console: true,
+  },
+});
+
+console.log(`Laya SMS lab → http://localhost:${server.port}`);

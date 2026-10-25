@@ -1,0 +1,22 @@
+{
+  "name": "laya-test",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "ollama": "^0.6.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
