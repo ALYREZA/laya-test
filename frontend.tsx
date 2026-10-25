@@ -46,6 +46,12 @@ type Sample = {
 
 type CategoryKey =
   | "otp"
+  | "banking"
+  | "government"
+  | "delivery"
+  | "bill"
+  | "social"
+  | "appointment"
   | "transactional"
   | "promotional"
   | "family"
@@ -56,6 +62,12 @@ type CategoryKey =
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
   otp: "رمز یک‌بارمصرف",
+  banking: "بانکی",
+  government: "دولتی / رسمی",
+  delivery: "ارسال مرسوله",
+  bill: "قبض / پرداخت",
+  social: "شبکه‌های اجتماعی",
+  appointment: "نوبت / قرار",
   transactional: "تراکنشی",
   promotional: "تبلیغاتی",
   family: "خانواده",

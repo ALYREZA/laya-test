@@ -77,8 +77,17 @@ async function classifySms(req: Request) {
           instructions: "What is the primary category of this SMS?",
           criteria: {
             otp: "One-time passcodes, verification codes, 2FA",
+            banking:
+              "Bank transfers, balance alerts, card activity, account notices from a bank",
+            government:
+              "Official or government messages (tax, ID, courts, municipalities, public agencies)",
+            delivery: "Package shipping, courier, and delivery status updates",
+            bill: "Utility bills, invoices, payment due reminders, top-ups",
+            social:
+              "Notifications from social networks or messaging apps (likes, follows, DMs, posts)",
+            appointment: "Appointment, booking, reservation, or schedule reminders",
             transactional:
-              "Receipts, delivery updates, appointment reminders, account alerts the user would expect",
+              "Other expected service alerts that are not banking, delivery, bill, or appointment",
             promotional: "Marketing, offers, sales, newsletters",
             family: "Messages from family members (parents, siblings, spouse, relatives)",
             friends: "Messages from friends or acquaintances",

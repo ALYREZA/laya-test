@@ -32,7 +32,7 @@ Each request asks Laya several questions in one forward pass:
 | `is_spam` | noul | Unsolicited junk / promo |
 | `is_phishing` | noul | Scam / credential theft intent |
 | `asks_credentials` | noul | Asks for OTP, PIN, password, bank details, or a “verify” link |
-| `category` | choice | `otp` · `transactional` · `promotional` · `family` · `friends` · `personal` · `scam` · `other` |
+| `category` | choice | `otp` · `banking` · `government` · `delivery` · `bill` · `social` · `appointment` · `transactional` · `promotional` · `family` · `friends` · `personal` · `scam` · `other` |
 | `risk` | score | Safe → caution → dangerous |
 
 ## API
